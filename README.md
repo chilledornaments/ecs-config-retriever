@@ -1,5 +1,7 @@
 # ecs-ssm-retriever
 
+![Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Tests/badge.svg)
+
 A dependant container used to retrieve configurations from SSM.
 
 This is useful for writing a configuration file stored in SSM to a volume shared by ECS containers in a task. Currently, ECS doesn't allow you to mount a secret / configuration as a file like Kubernetes does. This tool works around that.
