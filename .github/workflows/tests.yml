@@ -29,7 +29,7 @@ jobs:
 
       # The app has to be compiled with cgo enabled
     - name: Run Go Build
-      run: go build -o retriever ./cmd
+      run: go build -o retriever ./cmd/retriever
       env:
         GOOS: linux
         GOARCH: amd64
