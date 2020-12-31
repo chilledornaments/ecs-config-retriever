@@ -29,7 +29,7 @@ jobs:
 
       # The app has to be compiled with cgo enabled
     - name: Run Go Build
-      run: go build -o retriever ./cmd
+      run: go build -o retriever ./cmd/retriever
       env:
         GOOS: linux
         GOARCH: amd64
@@ -41,3 +41,6 @@ jobs:
         AWS_REGION: "us-east-2"
         AWS_ACCESS_KEY_ID: ${{ secrets.CI_AWS_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.CI_AWS_SECRET_KEY }}
+
+    - name: Test building container
+      run: make docker-build VERSION=ci && make docker-cleanup VERSION=ci
