@@ -9,7 +9,7 @@ on:
     - 'LICENSE.txt'
 jobs:
   ci:
-    name: Tests
+    name: Go Tests
     runs-on: ubuntu-latest
 
     strategy:
