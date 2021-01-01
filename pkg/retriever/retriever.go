@@ -43,13 +43,15 @@ func GetParameterFromSSM(name string, encrypted, encoded bool, log *logrus.Logge
 
 }
 
-func decodeParameterValue(p string, log *logrus.Logger) string {
-	data, err := base64.StdEncoding.DecodeString(p)
+// decodeParameterValue returns a base64-decoded string
+func decodeParameterValue(value string, log *logrus.Logger) string {
+	data, err := base64.StdEncoding.DecodeString(value)
 
 	if err != nil {
 		log.Fatalf("Error decoding parameter store value: %s", err.Error())
 	}
 
 	log.Info("Successfully decoded secret")
+
 	return string(data)
 }

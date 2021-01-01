@@ -10,7 +10,7 @@ RUN go build -o retriever ./cmd/retriever
 
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates
+RUN apk update && apk upgrade --no-cache && apk --no-cache add ca-certificates && rm -rf /var/cache/apk/*
 
 COPY --from=builder /go/src/github.com/mitchya1/ecs-ssm-retriever/retriever /
 
