@@ -18,7 +18,7 @@ This is useful for writing a configuration file stored in SSM to a volume shared
 
 `-path`: The file to save the parameter to
 
-`from-env`: Specify this flag to tell `retriever` to get its configuration from the environment. Default: `false`
+`-from-env`: Specify this flag to tell `retriever` to get its configuration from the environment. Default: `false`
 
 ## Env Vars
 
@@ -135,7 +135,12 @@ You must not change the `containerPath` for the `retriever` container, otherwise
 
 [Fargate shared volumes](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-storage.html)
 
+## Limitations
 
-## Future State
+`retriever` can only retrieve one parameter. If you need to work with multiple parameters, you can:
 
-Retrieve multiple parameters as once
+- Run multiple `retriever` containers with different commands
+
+- Build your own `retriever` image with a wrapper script
+
+- Open a PR to add support for retrieving multiple parameters!
