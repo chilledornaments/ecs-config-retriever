@@ -4,6 +4,10 @@ docker-build:
 push:
 	docker push mitchya1/ecs-ssm-retriever:$(VERSION)
 
+unit-tests:
+	go test -v ./cmd/retriever/
+	rm -rf /tmp/*
+
 integration-tests:
 	bash tests/run.sh
 

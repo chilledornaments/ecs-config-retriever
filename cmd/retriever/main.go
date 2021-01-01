@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"os"
 	"strconv"
+
+	"path/filepath"
 
 	"github.com/mitchya1/ecs-ssm-retriever/pkg/retriever"
 	"github.com/sirupsen/logrus"
@@ -56,10 +57,11 @@ func main() {
 	if fromJSON {
 		j := parseJSONArgument(log)
 		for _, p := range j.Parameters {
-			fmt.Printf("%+v", p)
 			v := retriever.GetParameterFromSSM(p.Name, p.Encryped, p.Encoded, log)
+			createDirectory(p.Path, log)
 			writeSecretToFile(v, p.Path, log)
 		}
+		// return so we don't continue processesing
 		return
 	}
 
@@ -68,20 +70,20 @@ func main() {
 	}
 
 	v := retriever.GetParameterFromSSM(parameterName, parameterIsEncrypted, parameterIsEncoded, log)
-
+	createDirectory(filePath, log)
 	writeSecretToFile(v, filePath, log)
 }
 
-// writeSecretToFile writes the retrieved secret (s) to the specified path (p) for use between containers
-func writeSecretToFile(s, p string, log *logrus.Logger) {
-	f, err := os.Create(p)
+// writeSecretToFile writes the retrieved parameter value (value) to the specified path (path) for use between containers
+func writeSecretToFile(value, path string, log *logrus.Logger) {
+	f, err := os.Create(path)
 	if err != nil {
 		log.Fatalf("Error creating file: %s", err.Error())
 	}
 
 	defer f.Close()
 
-	_, err = f.WriteString(s)
+	_, err = f.WriteString(value)
 
 	if err != nil {
 		log.Fatalf("Error writing parameter to file: %s", err.Error())
@@ -89,9 +91,34 @@ func writeSecretToFile(s, p string, log *logrus.Logger) {
 
 	f.Sync()
 
-	log.Infof("Successfully wrote paramater to '%s'", p)
+	log.Infof("Successfully wrote paramater to '%s'", path)
 }
 
+// createDirectory creates the directory for the parameter out file to be stored in
+// This is useful if you need to write files into subdirectories of your volume
+// For instance, you can mount one volume onto /init-out/app-a/config and another onto /init-out/app-b/config
+// Then mount these onto separate app containers
+func createDirectory(path string, log *logrus.Logger) {
+	fp := filepath.Dir(path)
+
+	info, err := os.Stat(fp)
+
+	if err != nil {
+		log.Infof("Path '%s' does not exist. Attempting to create so we can store file", fp)
+		err = os.MkdirAll(fp, 0775)
+		if err != nil {
+			log.Fatalf("Error creating directory structure '%s': %s", fp, err.Error())
+		}
+		log.Infof("Successfully created directory '%s'", fp)
+	} else {
+		if !info.IsDir() {
+			log.Fatalf("'%s' is a file - unable to create directory in its place", fp)
+		}
+	}
+
+}
+
+// getValuesFromEnv retrieves configuration from env vars
 func getValuesFromEnv(log *logrus.Logger) {
 	var err error
 
@@ -119,6 +146,7 @@ func getValuesFromEnv(log *logrus.Logger) {
 	}
 }
 
+// verifyFlags ensures no flag conflicts or major issues
 func verifyFlags(log *logrus.Logger) {
 	if fromEnv && fromJSON {
 		log.Fatal("Cannot set -from-env and -from-json")
@@ -129,6 +157,7 @@ func verifyFlags(log *logrus.Logger) {
 	}
 }
 
+// parseJSONArgument parses the -json argument into a struct
 func parseJSONArgument(log *logrus.Logger) JSONArgument {
 	j := &JSONArgument{}
 

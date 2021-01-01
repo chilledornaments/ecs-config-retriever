@@ -27,6 +27,9 @@ jobs:
     - name: Run Go Vet
       run: go vet -race ./cmd/retriever
 
+    - name: Run unit tests
+      run: make unit-tests
+
       # The app has to be compiled with cgo enabled
     - name: Run Go Build
       run: go build -o retriever ./cmd/retriever
