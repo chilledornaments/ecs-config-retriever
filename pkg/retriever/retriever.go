@@ -33,7 +33,7 @@ func GetParameterFromSSM(name string, encrypted, encoded bool, log *logrus.Logge
 		log.Fatalf("Error retrieving parameter: %s", err.Error())
 	}
 
-	log.Info("Succesfully retrieved parameter")
+	log.Info("Successfully retrieved parameter")
 
 	if encoded {
 		return decodeParameterValue(*param.Parameter.Value, log)
