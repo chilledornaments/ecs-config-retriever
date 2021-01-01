@@ -1,13 +1,15 @@
-name: "Tests"
+name: "Go Tests"
 
 on:
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ main ]
-
+    paths-ignore:
+    - '**/README.md'
+    - '**/LICENSE.txt'
 jobs:
   ci:
-    name: Tests
+    name: Go Tests
     runs-on: ubuntu-latest
 
     strategy:
@@ -27,6 +29,9 @@ jobs:
     - name: Run Go Vet
       run: go vet -race ./cmd/retriever
 
+    - name: Run unit tests
+      run: make unit-tests
+
       # The app has to be compiled with cgo enabled
     - name: Run Go Build
       run: go build -o retriever ./cmd/retriever
@@ -41,6 +46,3 @@ jobs:
         AWS_REGION: "us-east-2"
         AWS_ACCESS_KEY_ID: ${{ secrets.CI_AWS_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.CI_AWS_SECRET_KEY }}
-
-    - name: Test building container
-      run: make docker-build VERSION=ci && make docker-cleanup VERSION=ci

@@ -1,8 +1,8 @@
 # ecs-ssm-retriever
 
-![Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Tests/badge.svg)
+![Docker Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Docker%20Tests/badge.svg) ![Go Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Go%20Tests/badge.svg) ![CodeQL](https://github.com/mitchya1/ecs-ssm-retriever/workflows/CodeQL/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/mitchya1/ecs-ssm-retriever)](https://goreportcard.com/report/github.com/mitchya1/ecs-ssm-retriever)
 
-A dependant container used to retrieve configurations from SSM.
+A dependant container used to retrieve configurations from SSM and write them to disk for use by a long running ECS container.
 
 This is useful for writing a configuration file stored in SSM to a volume shared by ECS containers in a task. Currently, ECS doesn't allow you to mount a secret / configuration as a file like Kubernetes does. This tool works around that.
 
@@ -18,7 +18,11 @@ This is useful for writing a configuration file stored in SSM to a volume shared
 
 `-path`: The file to save the parameter to
 
-`-from-env`: Specify this flag to tell `retriever` to get its configuration from the environment. Default: `false`
+`-from-env`: Specify this flag to tell `retriever` to get parameter info from the environment. Default: `false`. Conflicts with `-from-json`
+
+`-from-json`: Specify this falg to tell `retriever` to get parameter info from a JSON passed as a string. Conflicts with `-from-env`
+
+`-json`: JSON-as-a-string that specifies which parameters to retrieve. See the `JSON Argument` section for more information
 
 ## Env Vars
 
@@ -31,6 +35,31 @@ This is useful for writing a configuration file stored in SSM to a volume shared
 `RETRIEVER_ENCODED`: see `-encoded` flag
 
 `RETRIEVER_ENCRYPTED`: see `-encrypted` flag
+
+## JSON Argument
+
+In order to retrieve multiple parameters, yYou can provide a JSON as a string to the `-json` argument.
+
+JSON structure:
+
+```json
+{
+    "parameters": [
+        {
+            "name": "some-parameter",
+            "encoded": false,
+            "encrypted": true,
+            "path": "/init-out/some-app/some-parameter.yaml"
+        },
+        {
+            "name": "some-other-parameter",
+            "encoded": true,
+            "encrypted": false,
+            "path": "/init-out/some-other-app/some-other-parameter.json"
+        }
+    ]
+}
+```
 
 ## IAM Permissions
 
@@ -134,13 +163,3 @@ You must not change the `containerPath` for the `retriever` container, otherwise
 ## Links
 
 [Fargate shared volumes](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-storage.html)
-
-## Limitations
-
-`retriever` can only retrieve one parameter. If you need to work with multiple parameters, you can:
-
-- Run multiple `retriever` containers with different commands
-
-- Build your own `retriever` image with a wrapper script
-
-- Open a PR to add support for retrieving multiple parameters!
