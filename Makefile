@@ -9,6 +9,7 @@ integration-tests:
 
 cleanup:
 	rm /tmp/param-*
+	rm /tmp/binary-param-*
 
 docker-cleanup:
 	docker rmi mitchya1/ecs-ssm-retriever:$(VERSION)

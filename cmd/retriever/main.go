@@ -42,16 +42,16 @@ func main() {
 	writeSecretToFile(v, filePath, log)
 }
 
-// writeSecretToFile writes the retrieved secret (s) to the specified path (p) for use between containers
-func writeSecretToFile(s, p string, log *logrus.Logger) {
-	f, err := os.Create(p)
+// writeSecretToFile writes the retrieved parameter value (value) to the specified path (path) for use between containers
+func writeSecretToFile(value, path string, log *logrus.Logger) {
+	f, err := os.Create(path)
 	if err != nil {
 		log.Fatalf("Error creating file: %s", err.Error())
 	}
 
 	defer f.Close()
 
-	_, err = f.WriteString(s)
+	_, err = f.WriteString(value)
 
 	if err != nil {
 		log.Fatalf("Error writing parameter to file: %s", err.Error())
@@ -59,9 +59,10 @@ func writeSecretToFile(s, p string, log *logrus.Logger) {
 
 	f.Sync()
 
-	log.Infof("Successfully wrote paramater to '%s'", p)
+	log.Infof("Successfully wrote paramater to '%s'", path)
 }
 
+// getValuesFromEnv sets variable values by getting them from the environment, not CLI args
 func getValuesFromEnv(log *logrus.Logger) {
 	var err error
 
