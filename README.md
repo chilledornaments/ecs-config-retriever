@@ -56,7 +56,7 @@ You must not change the `containerPath` for the `retriever` container, otherwise
 ```json
 [
     {
-        "command": ["cat", "/my-container/config/"],
+        "command": ["cat", "/my-container/config/config.conf"],
         "cpu": 100,
         "essential": true,
         "environment": [
@@ -95,7 +95,7 @@ You must not change the `containerPath` for the `retriever` container, otherwise
         "stopTimeout": 30
     },
     {
-        "command": ["/retriever", "-parameter=retriever-test", "-path=/init-out/param-not", "-encoded"],
+        "command": ["/retriever", "-parameter=retriever-test", "-path=/init-out/config.conf", "-encoded"],
         "cpu": 100,
         "essential": false,
         "environment": [
