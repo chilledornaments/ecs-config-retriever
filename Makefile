@@ -6,7 +6,7 @@ push:
 
 unit-tests:
 	go test -v ./cmd/retriever/
-	rm -rf /tmp/*
+	rm -rf /tmp/ci-*
 
 integration-tests:
 	bash tests/run.sh
