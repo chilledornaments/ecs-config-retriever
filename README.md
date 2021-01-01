@@ -1,8 +1,8 @@
 # ecs-ssm-retriever
 
-![Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Tests/badge.svg)
+![Docker Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Docker%20Tests/badge.svg) ![Go Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Go%20Tests/badge.svg) ![CodeQL](https://github.com/mitchya1/ecs-ssm-retriever/workflows/CodeQL/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/mitchya1/ecs-ssm-retriever)](https://goreportcard.com/report/github.com/mitchya1/ecs-ssm-retriever)
 
-A dependant container used to retrieve configurations from SSM.
+A dependant container used to retrieve configurations from SSM and write them to disk for use by a long running ECS container.
 
 This is useful for writing a configuration file stored in SSM to a volume shared by ECS containers in a task. Currently, ECS doesn't allow you to mount a secret / configuration as a file like Kubernetes does. This tool works around that.
 
