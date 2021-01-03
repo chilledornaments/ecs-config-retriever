@@ -2,35 +2,36 @@ version: '3'
 services:
   app_a:
     image: alpine:latest
-    container_name: retriever_ci_a
+    container_name: retriever_ci_a_multi
     volumes:
-      - config:/var/tmp
+      - config_a:/var/tmp
       - ${PWD}/tests/alpine-container-test-script.sh:/tmp/start.sh
     command: ["sh", "-c", "/tmp/start.sh"]
     environment:
-      - TEST_FILE_PATH=/var/tmp/a/app_a
+      - TEST_FILE_PATH=/var/tmp/app_a
       - EXPECTED_FILE_CONTENTS=hello world
     depends_on:
-      - retriever
+      - retriever_multi
 
   app_b:
     image: alpine:latest
-    container_name: retriever_ci_b
+    container_name: retriever_ci_b_multi
     volumes:
-      - config:/var/tmp
+      - config_b:/var/tmp
       - ${PWD}/tests/alpine-container-test-script.sh:/tmp/start.sh
     command: ["sh", "-c", "/tmp/start.sh"]
     environment:
-      - TEST_FILE_PATH=/var/tmp/b/app_b
+      - TEST_FILE_PATH=/var/tmp/app_b
       - EXPECTED_FILE_CONTENTS=hello world encoded
     depends_on:
-      - retriever
+      - retriever_multi
 
-  retriever:
+  retriever_multi:
     image: "mitchya1/ecs-ssm-retriever:ci"
-    container_name: retriever
+    container_name: retriever_multi
     volumes:
-      - config:/init-out
+      - config_a:/init-out/a
+      - config_b:/init-out/b
     command:
       - /retriever
       - "-from-json"
@@ -41,4 +42,5 @@ services:
       - AWS_ACCESS_KEY_ID=${ACCESS_KEY}
       - AWS_SECRET_ACCESS_KEY=${SECRET_KEY}
 volumes:
-  config: {}
+  config_a: {}
+  config_b: {}
