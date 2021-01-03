@@ -149,7 +149,7 @@ You must not change the `containerPath` for the `retriever` container, otherwise
                 "awslogs-stream-prefix": "init"
             }
         },
-        "image": "mitchya1/ecs-ssm-retriever:v0.1.0",
+        "image": "mitchya1/ecs-ssm-retriever:v0.2.0",
         "memory": 100,
         "memoryReservation": 50,
         "name": "my-container-init",
