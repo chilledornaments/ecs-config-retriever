@@ -36,8 +36,6 @@ services:
       - "-from-json"
       - "-json"
       - '{"parameters": [{"name": "retriever-test", "encrypted": false, "encoded": false, "path": "/init-out/a/app_a"}, {"name": "retriever-test-encoded", "encrypted": false, "encoded": true, "path": "/init-out/b/app_b"}]}'
-      - "&&"
-      - "sleep 60"
     environment:
       - AWS_REGION=us-east-2
       - AWS_ACCESS_KEY_ID=${ACCESS_KEY}
