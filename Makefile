@@ -16,7 +16,8 @@ cleanup:
 	rm /tmp/binary-param-*
 
 docker-cleanup:
-	docker rmi mitchya1/ecs-ssm-retriever:$(VERSION)
+	docker rmi --force mitchya1/ecs-ssm-retriever:$(VERSION)
 
 docker-tests:
-	docker-compose up
+	ACCESS_KEY=${ACCESS_KEY} SECRET_KEY=${SECRET_KEY} docker-compose up | tee /tmp/ci-compose-out
+	grep "with code 1" /tmp/ci-compose-out && exit 1
