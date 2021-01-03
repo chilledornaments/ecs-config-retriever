@@ -1,0 +1,46 @@
+version: '3'
+services:
+  app_a:
+    image: alpine:latest
+    container_name: retriever_ci_a_multi
+    volumes:
+      - config_a:/var/tmp
+      - ${PWD}/tests/alpine-container-test-script.sh:/tmp/start.sh
+    command: ["sh", "-c", "/tmp/start.sh"]
+    environment:
+      - TEST_FILE_PATH=/var/tmp/app_a
+      - EXPECTED_FILE_CONTENTS=hello world
+    depends_on:
+      - retriever_multi
+
+  app_b:
+    image: alpine:latest
+    container_name: retriever_ci_b_multi
+    volumes:
+      - config_b:/var/tmp
+      - ${PWD}/tests/alpine-container-test-script.sh:/tmp/start.sh
+    command: ["sh", "-c", "/tmp/start.sh"]
+    environment:
+      - TEST_FILE_PATH=/var/tmp/app_b
+      - EXPECTED_FILE_CONTENTS=hello world encoded
+    depends_on:
+      - retriever_multi
+
+  retriever_multi:
+    image: "mitchya1/ecs-ssm-retriever:ci"
+    container_name: retriever_multi
+    volumes:
+      - config_a:/init-out/a
+      - config_b:/init-out/b
+    command:
+      - /retriever
+      - "-from-json"
+      - "-json"
+      - '{"parameters": [{"name": "retriever-test", "encrypted": false, "encoded": false, "path": "/init-out/a/app_a"}, {"name": "retriever-test-encoded", "encrypted": false, "encoded": true, "path": "/init-out/b/app_b"}]}'
+    environment:
+      - AWS_REGION=us-east-2
+      - AWS_ACCESS_KEY_ID=${ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${SECRET_KEY}
+volumes:
+  config_a: {}
+  config_b: {}
