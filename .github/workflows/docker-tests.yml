@@ -23,12 +23,12 @@ jobs:
 
     - name: Test building container
       run: make docker-build VERSION=ci
-      env:
-        ACCESS_KEY: ${{ secrets.CI_AWS_ACCESS_KEY }}
-        SECRET_KEY: ${{ secrets.CI_AWS_SECRET_KEY }}
     
     - name: Run compose
       run: make docker-tests
-      
+      env:
+        ACCESS_KEY: ${{ secrets.CI_AWS_ACCESS_KEY }}
+        SECRET_KEY: ${{ secrets.CI_AWS_SECRET_KEY }}
+        
     - name: Cleanup
       run: make docker-cleanup VERSION=ci
