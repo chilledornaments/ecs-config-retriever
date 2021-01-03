@@ -1,7 +1,7 @@
 docker-build:
 	docker build -t mitchya1/ecs-ssm-retriever:$(VERSION) .
 
-push:
+docker-push:
 	docker push mitchya1/ecs-ssm-retriever:$(VERSION)
 
 unit-tests:
@@ -17,3 +17,6 @@ cleanup:
 
 docker-cleanup:
 	docker rmi mitchya1/ecs-ssm-retriever:$(VERSION)
+
+docker-tests:
+	docker-compose up
