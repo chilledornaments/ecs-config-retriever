@@ -21,5 +21,5 @@ docker-cleanup:
 docker-tests:
 	@echo "ACCESS_KEY=${ACCESS_KEY}" > .env
 	@echo "SECRET_KEY=${SECRET_KEY}" >> .env
-	docker-compose up | tee /tmp/ci-compose-out
+	docker-compose -f tests/docker-compose.yaml up | tee /tmp/ci-compose-out
 	grep "with code 1" /tmp/ci-compose-out && exit 1 || exit 0
