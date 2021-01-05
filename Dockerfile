@@ -16,6 +16,8 @@ COPY --from=builder /go/src/github.com/mitchya1/ecs-ssm-retriever/retriever /
 
 RUN adduser --system --no-create-home --uid 121 retriever
 
-RUN mkdir /init-out && chown -R retriever /init-out
+VOLUME "/init-out"
+
+RUN chown -R retriever /init-out
 
 USER retriever
