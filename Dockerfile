@@ -20,6 +20,6 @@ RUN mkdir /init-out
 
 VOLUME "/init-out"
 
-RUN chown -R retriever:retriever /init-out
+RUN chown -R retriever /init-out
 
 USER retriever
