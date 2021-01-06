@@ -10,9 +10,13 @@ RUN go build -o retriever ./cmd/retriever
 
 FROM alpine:latest
 
-RUN apk update && apk upgrade --no-cache && apk --no-cache add ca-certificates && rm -rf /var/cache/apk/*
+RUN apk update && apk upgrade --no-cache && apk --no-cache add ca-certificates su-exec && rm -rf /var/cache/apk/*
 
 COPY --from=builder /go/src/github.com/mitchya1/ecs-ssm-retriever/retriever /
+
+ADD docker-entrypoint.sh /
+
+RUN chmod +x /docker-entrypoint.sh
 
 RUN adduser --system --no-create-home --uid 121 retriever
 
@@ -22,4 +26,7 @@ VOLUME "/init-out"
 
 RUN chown -R retriever /init-out
 
-USER retriever
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
+
+# Run as root so entrypoint can chown the /init-out dir then su-exec as retriever
+USER root

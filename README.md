@@ -149,7 +149,7 @@ You must not change the `containerPath` for the `retriever` container, otherwise
                 "awslogs-stream-prefix": "init"
             }
         },
-        "image": "mitchya1/ecs-ssm-retriever:v0.2.0",
+        "image": "mitchya1/ecs-ssm-retriever:v0.2.2",
         "memory": 100,
         "memoryReservation": 50,
         "name": "my-container-init",
@@ -163,3 +163,7 @@ You must not change the `containerPath` for the `retriever` container, otherwise
 ## Links
 
 [Fargate shared volumes](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-storage.html)
+
+## Notes
+
+The container initially runs as root so it can `chown` the `/init-out` directory. The command passed to the container is run as the non-privileged `retriever` user.
