@@ -1,6 +1,6 @@
 # ecs-ssm-retriever
 
-![Go Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Go%20Tests/badge.svg) ![Docker Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Docker%20Tests/badge.svg) ![CodeQL](https://github.com/mitchya1/ecs-ssm-retriever/workflows/CodeQL/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/mitchya1/ecs-ssm-retriever)](https://goreportcard.com/report/github.com/mitchya1/ecs-ssm-retriever) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mitchya1_ecs-ssm-retriever&metric=alert_status)](https://sonarcloud.io/dashboard?id=mitchya1_ecs-ssm-retriever)
+![Go Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Go%20Tests/badge.svg) ![Docker Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Docker%20Tests/badge.svg) ![CodeQL](https://github.com/mitchya1/ecs-ssm-retriever/workflows/CodeQL/badge.svg) ![Vault Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Vault%20Docker%20Tests/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/mitchya1/ecs-ssm-retriever)](https://goreportcard.com/report/github.com/mitchya1/ecs-ssm-retriever) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mitchya1_ecs-ssm-retriever&metric=alert_status)](https://sonarcloud.io/dashboard?id=mitchya1_ecs-ssm-retriever)
 
 An init app used to retrieve configurations from SSM and write them to disk for use by a long running ECS container.
 
