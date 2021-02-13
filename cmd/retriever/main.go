@@ -1,20 +1,24 @@
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"flag"
+	"fmt"
 	"os"
-	"strconv"
-
-	"path/filepath"
+	"time"
 
 	"github.com/mitchya1/ecs-ssm-retriever/pkg/retriever"
+
+	vault "github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
 )
 
 var (
 	fromEnv              bool
 	fromJSON             bool
+	fromVault            bool
+	vaultPath            string
+	vaultUseSTS          bool
 	parameterIsEncoded   bool
 	parameterIsEncrypted bool
 	parameterName        string
@@ -22,10 +26,12 @@ var (
 	jsonSettings         string
 )
 
+// JSONArgument holds our ParameterSettings passed with the -from-json flag
 type JSONArgument struct {
 	Parameters []ParameterSetting `json:"parameters"`
 }
 
+// ParameterSetting contains information about a Parameter Store parameter and where to write it out
 type ParameterSetting struct {
 	Name     string `json:"name"`
 	Encryped bool   `json:"encrypted"`
@@ -42,6 +48,11 @@ func main() {
 	log.Info("Starting ECS SSM Bootstrapper")
 
 	flag.BoolVar(&fromEnv, "from-env", false, "Retrieve settings from env")
+	flag.BoolVar(&fromVault, "from-vault", false, "Retrieve settings from Hashi Vault")
+	// If you enable the kv engine in the default 'kv' path, your path will look something like kv/data/foo/test
+	// Note the `data/` path
+	flag.StringVar(&vaultPath, "vault-path", "", "Path to Vault secret")
+	flag.BoolVar(&vaultUseSTS, "vault-use-sts", false, "If Retriever can access Vault use an IAM role, set this flag")
 	flag.StringVar(&parameterName, "parameter", "", "Name of parameter to retrieve")
 	flag.BoolVar(&parameterIsEncoded, "encoded", false, "Decides whether or not the parameter will be base64 decoded prior to writing to file")
 	flag.BoolVar(&parameterIsEncrypted, "encrypted", false, "If the SSM parameter is encrypted, provide this argument")
@@ -65,6 +76,37 @@ func main() {
 		return
 	}
 
+	if fromVault {
+		// TODO add support for AgentAddress
+		// TODO make this more configurable
+		vc := vault.Config{
+			Address:    os.Getenv("VAULT_ADDR"),
+			MaxRetries: 2,
+			Timeout:    4 * time.Second,
+		}
+
+		v, err := vault.NewClient(&vc)
+
+		if err != nil {
+			log.Fatalf("Error creating Vault client: %s", err.Error())
+		}
+
+		// TODO add support for STS
+		v.SetToken(os.Getenv("VAULT_TOKEN"))
+
+		c := v.Logical()
+		m := retriever.GetSecretFromVault(vaultPath, parameterIsEncoded, log, c)
+
+		s := new(bytes.Buffer)
+
+		for k, v := range m {
+			fmt.Fprintf(s, "%s = %s\n", k, v)
+		}
+
+		writeSecretToFile(s.String(), filePath, log)
+		return
+	}
+
 	if fromEnv {
 		getValuesFromEnv(log)
 	}
@@ -72,100 +114,4 @@ func main() {
 	v := retriever.GetParameterFromSSM(parameterName, parameterIsEncrypted, parameterIsEncoded, log)
 	createDirectory(filePath, log)
 	writeSecretToFile(v, filePath, log)
-}
-
-// writeSecretToFile writes the retrieved parameter value (value) to the specified path (path) for use between containers
-func writeSecretToFile(value, path string, log *logrus.Logger) {
-	f, err := os.Create(path)
-	if err != nil {
-		log.Fatalf("Error creating file: %s", err.Error())
-	}
-
-	defer f.Close()
-
-	_, err = f.WriteString(value)
-
-	if err != nil {
-		log.Fatalf("Error writing parameter to file: %s", err.Error())
-	}
-
-	f.Sync()
-
-	log.Infof("Successfully wrote paramater to '%s'", path)
-}
-
-// createDirectory creates the directory for the parameter out file to be stored in
-// This is useful if you need to write files into subdirectories of your volume
-// For instance, you can mount one volume onto /init-out/app-a/config and another onto /init-out/app-b/config
-// Then mount these onto separate app containers
-func createDirectory(path string, log *logrus.Logger) {
-	fp := filepath.Dir(path)
-
-	info, err := os.Stat(fp)
-
-	if err != nil {
-		log.Infof("Path '%s' does not exist. Attempting to create so we can store file", fp)
-		err = os.MkdirAll(fp, 0775)
-		if err != nil {
-			log.Fatalf("Error creating directory structure '%s': %s", fp, err.Error())
-		}
-		log.Infof("Successfully created directory '%s'", fp)
-	} else {
-		if !info.IsDir() {
-			log.Fatalf("'%s' is a file - unable to create directory in its place", fp)
-		}
-	}
-
-}
-
-// getValuesFromEnv retrieves configuration from env vars
-func getValuesFromEnv(log *logrus.Logger) {
-	var err error
-
-	parameterName = os.Getenv("RETRIEVER_PARAMETER")
-	filePath = os.Getenv("RETRIEVER_PATH")
-
-	if os.Getenv("RETRIEVER_ENCODED") != "" {
-		parameterIsEncoded, err = strconv.ParseBool(os.Getenv("RETRIEVER_ENCODED"))
-		if err != nil {
-			log.Fatalf("Unable to convert '%s' to bool", os.Getenv("RETRIEVER_ENCODED"))
-		}
-		log.Infof("Setting parameterIsEncoded to '%t'", parameterIsEncoded)
-	} else {
-		log.Info("RETRIEVER_ENCODED env var not set, defaulting to false")
-	}
-
-	if os.Getenv("RETRIEVER_ENCRYPTED") != "" {
-		parameterIsEncrypted, err = strconv.ParseBool(os.Getenv("RETRIEVER_ENCRYPTED"))
-		if err != nil {
-			log.Fatalf("Unable to convert '%s' to bool", os.Getenv("RETRIEVER_ENCRYPTED"))
-		}
-		log.Infof("Setting parameterIsEncrypted to '%t'", parameterIsEncrypted)
-	} else {
-		log.Info("RETRIEVER_ENCRYPTED env var not set, defaulting to false")
-	}
-}
-
-// verifyFlags ensures no flag conflicts or major issues
-func verifyFlags(log *logrus.Logger) {
-	if fromEnv && fromJSON {
-		log.Fatal("Cannot set -from-env and -from-json")
-	}
-
-	if fromJSON && jsonSettings == "" {
-		log.Fatal("-from-json specified but no value provided for -json")
-	}
-}
-
-// parseJSONArgument parses the -json argument into a struct
-func parseJSONArgument(log *logrus.Logger) JSONArgument {
-	j := &JSONArgument{}
-
-	err := json.Unmarshal([]byte(jsonSettings), j)
-
-	if err != nil {
-		log.Fatalf("Unable to unmarshal -json argument into JSONArgument struct: %s", err.Error())
-	}
-
-	return *j
 }
