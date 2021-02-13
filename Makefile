@@ -28,6 +28,11 @@ docker-tests:
 	# The goal is to ensure that retriever can write to a volume mounted as a subdir of /init-out/
 	docker-compose -f tests/docker-compose-multi-volume.yaml up | tee /tmp/ci-compose-out
 	grep "with code 1" /tmp/ci-compose-out && exit 1 || exit 0
-	# Test Vault
-	docker-compose -f tests/docker-compose-vault.yaml up | tee /tmp/ci-compose-out
-	grep "with code 1" /tmp/ci-compose-out && exit 1 || exit 0
+	
+
+docker-vault-tests:
+	docker-compose -f tests/docker-compose-vault.yaml up | tee /tmp/ci-vault-compose-out &
+	# The test only takes a few seconds to run
+	sleep 10
+	docker stop vault
+	grep "with code 1" /tmp/ci-vault-compose-out && exit 1 || exit 0

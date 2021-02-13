@@ -1,0 +1,31 @@
+name: "Vault Docker Tests"
+
+on:
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ main ]
+    paths-ignore:
+    - '**/README.md'
+    - '**/LICENSE.txt'
+jobs:
+  ci:
+    name: Vault Docker Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ 'ubuntu-latest' ]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Test building container
+      run: make docker-build VERSION=ci
+    
+    - name: Run compose
+      run: make docker-vault-tests
+        
+    - name: Cleanup
+      run: make docker-cleanup VERSION=ci
