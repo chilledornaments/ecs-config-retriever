@@ -92,7 +92,6 @@ func verifyFlags(log *logrus.Logger) {
 		log.Fatal("-from-vault specified but VAULT_ADDR env var is empty")
 	}
 
-	// TODO don't require VAULT_TOKEN because we could use STS
 	if fromVault && os.Getenv("VAULT_TOKEN") == "" && !vaultUseSTS {
 		log.Fatal("-from-vault specified (not using STS) but VAULT_TOKEN env var is empty")
 	}

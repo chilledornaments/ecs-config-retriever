@@ -26,7 +26,9 @@ This is useful for writing a configuration file stored in SSM to a volume shared
 
 `-from-vault`: Retrieve secrets from Hashi Vault
 
-`-vault-path`: The path to the vault secret. Pay extra attention to this if using K/V v2.
+`-vault-path`: The path to the vault secret. Pay extra attention to this if using K/V v2
+
+`-vault-use-sts`: Provide this flag when your container can authenticate to Vault using an IAM role
 
 ## Env Vars
 
