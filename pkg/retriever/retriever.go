@@ -4,10 +4,12 @@ import (
 	"os"
 
 	"encoding/base64"
+	"encoding/json"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	vault "github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
 )
 
@@ -41,6 +43,46 @@ func GetParameterFromSSM(name string, encrypted, encoded bool, log *logrus.Logge
 
 	return *param.Parameter.Value
 
+}
+
+func GetSecretFromVault(path string, encoded bool, log *logrus.Logger, c *vault.Logical) map[string]string {
+
+	secret, err := c.Read(path)
+
+	if secret == nil {
+		log.Fatalf("Secret returned from vault was nil")
+	}
+
+	if err != nil {
+		log.Fatalf("Error reading secret from Vault path '%s': %s", path, err.Error())
+	} else if len(secret.Warnings) > 0 {
+		log.Fatalf("Errors returned from Vault: %v", secret.Warnings)
+	}
+
+	m := make(map[string]string)
+
+	rv := secret.Data["data"]
+
+	b, err := json.Marshal(rv)
+
+	if err != nil {
+		panic(err)
+	}
+
+	json.Unmarshal(b, &m)
+
+	if encoded {
+		newMap := make(map[string]string)
+
+		for k, v := range m {
+			newMap[k] = decodeParameterValue(v, log)
+		}
+
+		return newMap
+	}
+
+	// We return the entire map
+	return m
 }
 
 // decodeParameterValue returns a base64-decoded string

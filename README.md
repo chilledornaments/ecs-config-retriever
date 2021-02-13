@@ -24,6 +24,10 @@ This is useful for writing a configuration file stored in SSM to a volume shared
 
 `-json`: JSON-as-a-string that specifies which parameters to retrieve. See the `JSON Argument` section for more information
 
+`-from-vault`: Retrieve secrets from Hashi Vault
+
+`-vault-path`: The path to the vault secret. Pay extra attention to this if using K/V v2.
+
 ## Env Vars
 
 `AWS_REGION` - must be provided so an AWS session can be created. Set this to the region `retriever` is running in
@@ -35,6 +39,10 @@ This is useful for writing a configuration file stored in SSM to a volume shared
 `RETRIEVER_ENCODED`: see `-encoded` flag
 
 `RETRIEVER_ENCRYPTED`: see `-encrypted` flag
+
+`VAULT_ADDR`: If `-from-vault` specified, this must be set 
+
+`VAULT_TOKEN`: If `-from-vault` specified, this must be set unless Vault is configured to use AWS IAM auth
 
 ## JSON Argument
 

@@ -1,0 +1,95 @@
+version: '3'
+services:
+  vault:
+    image: vault:1.6.2
+    container_name: vault
+    command: ["vault", "server", "-dev", ">/dev/null"]
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=ci-token
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8300
+    ports:
+      - 8300:8300
+
+  vault_enabler:
+    image: vault:1.6.2
+    container_name: vault_enabler
+    command: ["vault", "secrets", "enable", "-version=2", "-path=kv", "kv"]
+    environment:
+      - VAULT_ADDR=http://vault:8300
+      - VAULT_TOKEN=ci-token
+    depends_on:
+      - vault
+
+  vault_writer_one:
+    image: vault:1.6.2
+    container_name: vault_writer_one
+    command: ["vault", "kv", "put", "kv/one", "hello=world"]
+    environment:
+      - VAULT_ADDR=http://vault:8300
+      - VAULT_TOKEN=ci-token
+    depends_on:
+      - vault_enabler
+
+  vault_writer_two:
+    image: vault:1.6.2
+    container_name: vault_writer_two
+    command: ["vault", "kv", "put", "kv/two", "config={\"hello\": \"world\"}"]
+    environment:
+      - VAULT_ADDR=http://vault:8300
+      - VAULT_TOKEN=ci-token
+    depends_on:
+      - vault_enabler
+
+  retriever_one:
+    image: mitchya1/ecs-ssm-retriever:ci
+    container_name: retriever_one
+    volumes:
+      - one:/init-out
+    command:
+      - /retriever
+      - "-from-vault"
+      - "-path=/init-out/out.txt"
+      - "-vault-path=kv/data/one"
+    environment:
+      - VAULT_ADDR=http://vault:8300
+      - VAULT_TOKEN=ci-token
+    depends_on: 
+      - vault_writer_one
+
+  retriever_two:
+    image: mitchya1/ecs-ssm-retriever:ci
+    container_name: retriever_two
+    volumes:
+      - two:/init-out
+    command:
+      - /retriever
+      - "-from-vault"
+      - "-path=/init-out/out.txt"
+      - "-vault-path=kv/data/two"
+    environment:
+      - VAULT_ADDR=http://vault:8300
+      - VAULT_TOKEN=ci-token
+    depends_on: 
+      - vault_writer_two
+
+  check_one:
+    image: alpine
+    container_name: check_one
+    volumes: 
+      - one:/tmp
+    command: ["cat", "/tmp/out.txt"]
+    depends_on: 
+      - retriever_one
+
+  check_two:
+    image: alpine
+    container_name: check_two
+    volumes: 
+      - two:/tmp
+    command: ["cat", "/tmp/out.txt"]
+    depends_on: 
+      - retriever_one
+
+volumes:
+  one: {}
+  two: {}
