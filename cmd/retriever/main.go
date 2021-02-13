@@ -26,10 +26,12 @@ var (
 	jsonSettings         string
 )
 
+// JSONArgument holds our ParameterSettings passed with the -from-json flag
 type JSONArgument struct {
 	Parameters []ParameterSetting `json:"parameters"`
 }
 
+// ParameterSetting contains information about a Parameter Store parameter and where to write it out
 type ParameterSetting struct {
 	Name     string `json:"name"`
 	Encryped bool   `json:"encrypted"`
