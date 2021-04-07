@@ -79,7 +79,12 @@ func main() {
 	if fromJSON {
 		j := parseJSONArgument(log)
 		for _, p := range j.Parameters {
-			v := retriever.GetParameterFromSSM(ssmClient, p.Name, p.Encryped, p.Encoded, log)
+			v, e := retriever.GetParameterFromSSM(ssmClient, p.Name, p.Encryped, p.Encoded, log)
+
+			if e != nil {
+				log.Fatal("Error retrieving parameter. Exiting.")
+			}
+
 			createDirectory(p.Path, log)
 			writeSecretToFile(v, p.Path, log)
 		}
@@ -122,7 +127,12 @@ func main() {
 		getValuesFromEnv(log)
 	}
 
-	v := retriever.GetParameterFromSSM(ssmClient, parameterName, parameterIsEncrypted, parameterIsEncoded, log)
+	v, e := retriever.GetParameterFromSSM(ssmClient, parameterName, parameterIsEncrypted, parameterIsEncoded, log)
+
+	if e != nil {
+		log.Fatal("Error retrieving parameter. Exiting.")
+	}
+
 	createDirectory(filePath, log)
 	writeSecretToFile(v, filePath, log)
 }
