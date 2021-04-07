@@ -7,6 +7,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/mitchya1/ecs-file-retriever/pkg/retriever"
 
 	vault "github.com/hashicorp/vault/api"
@@ -65,10 +68,18 @@ func main() {
 	// Ensure that conflicting or incomplete arguments have not been provided
 	verifyFlags(log)
 
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(os.Getenv("AWS_REGION"))})
+
+	if err != nil {
+		log.Fatalf("Error creating AWS Session: %s", err.Error())
+	}
+
+	ssmClient := ssm.New(sess)
+
 	if fromJSON {
 		j := parseJSONArgument(log)
 		for _, p := range j.Parameters {
-			v := retriever.GetParameterFromSSM(p.Name, p.Encryped, p.Encoded, log)
+			v := retriever.GetParameterFromSSM(ssmClient, p.Name, p.Encryped, p.Encoded, log)
 			createDirectory(p.Path, log)
 			writeSecretToFile(v, p.Path, log)
 		}
@@ -111,7 +122,7 @@ func main() {
 		getValuesFromEnv(log)
 	}
 
-	v := retriever.GetParameterFromSSM(parameterName, parameterIsEncrypted, parameterIsEncoded, log)
+	v := retriever.GetParameterFromSSM(ssmClient, parameterName, parameterIsEncrypted, parameterIsEncoded, log)
 	createDirectory(filePath, log)
 	writeSecretToFile(v, filePath, log)
 }

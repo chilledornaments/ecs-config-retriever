@@ -5,16 +5,70 @@ import (
 	"fmt"
 	"net"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/http"
 	"github.com/hashicorp/vault/vault"
 	"github.com/sirupsen/logrus"
+	"gotest.tools/assert"
 )
 
 const (
 	secretPath = "kv-v2/test/ci/secret"
 )
+
+type mockSSMClient struct {
+	ssmiface.SSMAPI
+	Encoded bool
+}
+
+func (m *mockSSMClient) GetParameter(input *ssm.GetParameterInput) (*ssm.GetParameterOutput, error) {
+
+	var v string
+
+	if m.Encoded {
+		v = base64.StdEncoding.EncodeToString([]byte("This is a base64 encoded CI test"))
+	} else {
+		v = "This is a CI test"
+	}
+
+	r := ssm.GetParameterOutput{
+		Parameter: &ssm.Parameter{
+			ARN:              aws.String(""),
+			DataType:         aws.String("text"),
+			Name:             aws.String("test"),
+			LastModifiedDate: aws.Time(time.Now()),
+			Type:             aws.String("String"),
+			Value:            &v,
+		},
+	}
+
+	return &r, nil
+}
+
+func TestRetrievePlaintextSSMParameter(t *testing.T) {
+	c := mockSSMClient{
+		Encoded: false,
+	}
+
+	v := GetParameterFromSSM(&c, "/ci/test", false, false, logrus.New())
+
+	assert.Equal(t, v, "This is a CI test")
+}
+
+func TestRetrieveEncodedSSMParameter(t *testing.T) {
+	c := mockSSMClient{
+		Encoded: true,
+	}
+
+	v := GetParameterFromSSM(&c, "/ci/example", false, true, logrus.New())
+
+	assert.Equal(t, v, "This is a base64 encoded CI test")
+}
 
 func createVaultServer(t *testing.T) (net.Listener, *api.Client) {
 	core, keyShares, rootToken := vault.TestCoreUnsealed(t)
