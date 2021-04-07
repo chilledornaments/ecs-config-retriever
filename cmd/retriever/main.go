@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/mitchya1/ecs-ssm-retriever/pkg/retriever"
+	"github.com/mitchya1/ecs-file-retriever/pkg/retriever"
 
 	vault "github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
