@@ -1,4 +1,4 @@
-module github.com/mitchya1/ecs-ssm-retriever
+module github.com/mitchya1/ecs-file-retriever
 
 go 1.15
 
