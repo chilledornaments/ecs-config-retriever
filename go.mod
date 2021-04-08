@@ -1,4 +1,4 @@
-module github.com/mitchya1/ecs-file-retriever
+module github.com/mitchya1/ecs-config-retriever
 
 go 1.16
 

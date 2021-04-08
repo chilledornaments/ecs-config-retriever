@@ -1,8 +1,8 @@
 docker-build:
-	docker build -t mitchya1/ecs-ssm-retriever:$(VERSION) .
+	docker build -t mitchya1/ecs-config-retriever:$(VERSION) .
 
 docker-push:
-	docker push mitchya1/ecs-ssm-retriever:$(VERSION)
+	docker push mitchya1/ecs-config-retriever:$(VERSION)
 
 unit-tests:
 	go test -v ./cmd/retriever/
@@ -17,7 +17,7 @@ cleanup:
 	rm /tmp/binary-param-*
 
 docker-cleanup:
-	docker rmi --force mitchya1/ecs-ssm-retriever:$(VERSION)
+	docker rmi --force mitchya1/ecs-config-retriever:$(VERSION)
 
 docker-tests:
 	@echo "ACCESS_KEY=${ACCESS_KEY}" > .env

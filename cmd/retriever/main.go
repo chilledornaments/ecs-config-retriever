@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/mitchya1/ecs-file-retriever/pkg/retriever"
+	"github.com/mitchya1/ecs-config-retriever/pkg/retriever"
 
 	vault "github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
