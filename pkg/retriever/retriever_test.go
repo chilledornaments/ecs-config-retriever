@@ -55,7 +55,7 @@ func TestRetrievePlaintextSSMParameter(t *testing.T) {
 		Encoded: false,
 	}
 
-	v, e := GetParameterFromSSM(&c, "/ci/test", false, false, logrus.New())
+	v, e := GetParameterFromSSM(&c, logrus.New(), "/ci/test", false, false)
 
 	assert.Equal(t, e, nil)
 	assert.Equal(t, v, "This is a CI test")
@@ -66,7 +66,7 @@ func TestRetrieveEncodedSSMParameter(t *testing.T) {
 		Encoded: true,
 	}
 
-	v, e := GetParameterFromSSM(&c, "/ci/example", false, true, logrus.New())
+	v, e := GetParameterFromSSM(&c, logrus.New(), "/ci/example", false, true)
 
 	assert.Equal(t, e, nil)
 	assert.Equal(t, v, "This is a base64 encoded CI test")
