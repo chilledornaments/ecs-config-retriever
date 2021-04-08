@@ -13,7 +13,7 @@ import (
 func writeValueToFile(value, path string, log *logrus.Logger) error {
 	f, err := os.Create(path)
 	if err != nil {
-		log.Error("Error creating file: %s", err.Error())
+		log.Errorf("Error creating file: %s", err.Error())
 		return err
 	}
 
@@ -22,7 +22,7 @@ func writeValueToFile(value, path string, log *logrus.Logger) error {
 	_, err = f.WriteString(value)
 
 	if err != nil {
-		log.Error("Error writing parameter to file: %s", err.Error())
+		log.Errorf("Error writing parameter to file: %s", err.Error())
 		return err
 	}
 
@@ -45,13 +45,13 @@ func createDirectory(path string, log *logrus.Logger) error {
 		log.Infof("Path '%s' does not exist. Attempting to create so we can store file", fp)
 		err = os.MkdirAll(fp, 0775)
 		if err != nil {
-			log.Error("Error creating directory structure '%s': %s", fp, err.Error())
+			log.Errorf("Error creating directory structure '%s': %s", fp, err.Error())
 			return err
 		}
 		log.Infof("Successfully created directory '%s'", fp)
 	} else {
 		if !info.IsDir() {
-			log.Error("'%s' is a file - unable to create directory in its place", fp)
+			log.Errorf("'%s' is a file - unable to create directory in its place", fp)
 			return err
 		}
 	}
@@ -118,7 +118,7 @@ func parseJSONArgument(log *logrus.Logger) (JSONArgument, error) {
 	err := json.Unmarshal([]byte(jsonSettings), j)
 
 	if err != nil {
-		log.Error("Unable to unmarshal -json argument into JSONArgument struct: %s", err.Error())
+		log.Errorf("Unable to unmarshal -json argument into JSONArgument struct: %s", err.Error())
 		return *j, err
 	}
 
