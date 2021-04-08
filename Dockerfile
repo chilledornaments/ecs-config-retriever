@@ -1,4 +1,4 @@
-FROM golang:1.15.6 AS builder
+FROM golang:1.16.1 AS builder
 
 ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 
