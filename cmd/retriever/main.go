@@ -111,7 +111,7 @@ func vaultHandler(log *logrus.Logger) error {
 	v, err := vault.NewClient(&vc)
 
 	if err != nil {
-		log.Error("Error creating Vault client: %s", err.Error())
+		log.Errorf("Error creating Vault client: %s", err.Error())
 		return err
 	}
 
