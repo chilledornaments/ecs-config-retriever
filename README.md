@@ -1,12 +1,12 @@
-# ecs-ssm-retriever
+# ecs-config-retriever
 
 ![Go Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Go%20Tests/badge.svg) ![Docker Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Docker%20Tests/badge.svg) ![CodeQL](https://github.com/mitchya1/ecs-ssm-retriever/workflows/CodeQL/badge.svg) ![Vault Tests](https://github.com/mitchya1/ecs-ssm-retriever/workflows/Vault%20Docker%20Tests/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/mitchya1/ecs-ssm-retriever)](https://goreportcard.com/report/github.com/mitchya1/ecs-ssm-retriever) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mitchya1_ecs-ssm-retriever&metric=alert_status)](https://sonarcloud.io/dashboard?id=mitchya1_ecs-ssm-retriever)
 
-An init app used to retrieve configurations from SSM and write them to disk for use by a long running ECS container.
+An init app used to retrieve configurations from SSM or Hashi Vault and write them to disk for use by a long running ECS container.
 
 This is useful for writing a configuration file stored in SSM to a volume shared by ECS containers in a task. Currently, ECS doesn't allow you to mount a secret / configuration as a file like Kubernetes does. This tool works around that.
 
-[Image on Docker Hub](https://hub.docker.com/r/mitchya1/ecs-ssm-retriever)
+[Image on Docker Hub](https://hub.docker.com/r/mitchya1/ecs-config-retriever)
 
 ## Flags
 

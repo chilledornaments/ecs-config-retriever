@@ -41,7 +41,7 @@ services:
       - vault_enabler
 
   retriever_one:
-    image: mitchya1/ecs-ssm-retriever:ci
+    image: mitchya1/ecs-config-retriever:ci
     container_name: retriever_one
     volumes:
       - one:/init-out
@@ -57,7 +57,7 @@ services:
       - vault_writer_one
 
   retriever_two:
-    image: mitchya1/ecs-ssm-retriever:ci
+    image: mitchya1/ecs-config-retriever:ci
     container_name: retriever_two
     volumes:
       - two:/init-out

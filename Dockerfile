@@ -2,7 +2,7 @@ FROM golang:1.16.1 AS builder
 
 ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 
-WORKDIR /go/src/github.com/mitchya1/ecs-ssm-retriever
+WORKDIR /go/src/github.com/mitchya1/ecs-config-retriever
 
 COPY . .
 
@@ -12,7 +12,7 @@ FROM alpine:latest
 
 RUN apk update && apk upgrade --no-cache && apk --no-cache add ca-certificates su-exec && rm -rf /var/cache/apk/*
 
-COPY --from=builder /go/src/github.com/mitchya1/ecs-ssm-retriever/retriever /
+COPY --from=builder /go/src/github.com/mitchya1/ecs-config-retriever/retriever /
 
 ADD docker-entrypoint.sh /
 
