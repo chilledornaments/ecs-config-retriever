@@ -42,13 +42,105 @@ type ParameterSetting struct {
 	Path     string `json:"path"`
 }
 
+func ssmHandler(log *logrus.Logger) {
+
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(os.Getenv("AWS_REGION"))})
+
+	if err != nil {
+		log.Fatalf("Error creating AWS Session: %s", err.Error())
+	}
+
+	ssmClient := ssm.New(sess)
+
+	v, e := retriever.GetParameterFromSSM(ssmClient, log, parameterName, parameterIsEncrypted, parameterIsEncoded)
+
+	if e != nil {
+		// GetParameterFromSSM already logs the error
+		os.Exit(1)
+	}
+
+	if e = createDirectory(filePath, log); e != nil {
+		os.Exit(1)
+	}
+	if e = writeValueToFile(v, filePath, log); e != nil {
+		os.Exit(1)
+	}
+
+}
+
+func ssmJSONHandler(log *logrus.Logger, j JSONArgument) {
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(os.Getenv("AWS_REGION"))})
+
+	if err != nil {
+		log.Fatalf("Error creating AWS Session: %s", err.Error())
+	}
+
+	ssmClient := ssm.New(sess)
+
+	for _, p := range j.Parameters {
+		v, e := retriever.GetParameterFromSSM(ssmClient, log, p.Name, p.Encryped, p.Encoded)
+
+		if e != nil {
+			// GetParameterFromSSM already logs the error
+			os.Exit(1)
+		}
+
+		e = createDirectory(p.Path, log)
+
+		if e != nil {
+			// writeValueToFile already logs, so we won't do that again here
+			os.Exit(1)
+		}
+
+		e = writeValueToFile(v, p.Path, log)
+
+		if e != nil {
+			// writeValueToFile already logs, so we won't do that again here
+			os.Exit(1)
+		}
+	}
+}
+
+func vaultHandler(log *logrus.Logger) error {
+	vc := vault.Config{
+		Address:    os.Getenv("VAULT_ADDR"),
+		MaxRetries: 2,
+		Timeout:    4 * time.Second,
+	}
+
+	v, err := vault.NewClient(&vc)
+
+	if err != nil {
+		log.Error("Error creating Vault client: %s", err.Error())
+		return err
+	}
+
+	// TODO add support for STS
+	v.SetToken(os.Getenv("VAULT_TOKEN"))
+
+	c := v.Logical()
+	m := retriever.GetSecretFromVault(vaultPath, parameterIsEncoded, log, c)
+
+	s := new(bytes.Buffer)
+
+	for k, v := range m {
+		fmt.Fprintf(s, "%s = %s\n", k, v)
+	}
+
+	if err = writeValueToFile(s.String(), filePath, log); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main() {
 	log := logrus.New()
 
 	log.SetFormatter(&logrus.JSONFormatter{})
 	log.SetOutput(os.Stdout)
 
-	log.Info("Starting ECS SSM Bootstrapper")
+	log.Info("Starting ECS File Retriever")
 
 	flag.BoolVar(&fromEnv, "from-env", false, "Retrieve settings from env")
 	flag.BoolVar(&fromVault, "from-vault", false, "Retrieve settings from Hashi Vault")
@@ -68,58 +160,21 @@ func main() {
 	// Ensure that conflicting or incomplete arguments have not been provided
 	verifyFlags(log)
 
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(os.Getenv("AWS_REGION"))})
-
-	if err != nil {
-		log.Fatalf("Error creating AWS Session: %s", err.Error())
-	}
-
-	ssmClient := ssm.New(sess)
-
 	if fromJSON {
-		j := parseJSONArgument(log)
-		for _, p := range j.Parameters {
-			v, e := retriever.GetParameterFromSSM(ssmClient, p.Name, p.Encryped, p.Encoded, log)
+		j, e := parseJSONArgument(log)
 
-			if e != nil {
-				log.Fatal("Error retrieving parameter. Exiting.")
-			}
-
-			createDirectory(p.Path, log)
-			writeSecretToFile(v, p.Path, log)
+		if e != nil {
+			os.Exit(1)
 		}
-		// return so we don't continue processesing
+
+		ssmJSONHandler(log, j)
+		// Return so we don't continue processing
 		return
 	}
 
 	if fromVault {
-		// TODO add support for AgentAddress
-		// TODO make this more configurable
-		vc := vault.Config{
-			Address:    os.Getenv("VAULT_ADDR"),
-			MaxRetries: 2,
-			Timeout:    4 * time.Second,
-		}
-
-		v, err := vault.NewClient(&vc)
-
-		if err != nil {
-			log.Fatalf("Error creating Vault client: %s", err.Error())
-		}
-
-		// TODO add support for STS
-		v.SetToken(os.Getenv("VAULT_TOKEN"))
-
-		c := v.Logical()
-		m := retriever.GetSecretFromVault(vaultPath, parameterIsEncoded, log, c)
-
-		s := new(bytes.Buffer)
-
-		for k, v := range m {
-			fmt.Fprintf(s, "%s = %s\n", k, v)
-		}
-
-		writeSecretToFile(s.String(), filePath, log)
+		vaultHandler(log)
+		// Return so we don't continue processing
 		return
 	}
 
@@ -127,12 +182,7 @@ func main() {
 		getValuesFromEnv(log)
 	}
 
-	v, e := retriever.GetParameterFromSSM(ssmClient, parameterName, parameterIsEncrypted, parameterIsEncoded, log)
-
-	if e != nil {
-		log.Fatal("Error retrieving parameter. Exiting.")
-	}
-
-	createDirectory(filePath, log)
-	writeSecretToFile(v, filePath, log)
+	// Fall back to retrieving a single SSM parameter
+	// This handles either env vars or args
+	ssmHandler(log)
 }

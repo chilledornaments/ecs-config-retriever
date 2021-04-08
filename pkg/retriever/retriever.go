@@ -12,7 +12,7 @@ import (
 )
 
 // GetParameterFromSSM retrieves the parameter from SSM
-func GetParameterFromSSM(c ssmiface.SSMAPI, name string, encrypted bool, encoded bool, log *logrus.Logger) (string, error) {
+func GetParameterFromSSM(c ssmiface.SSMAPI, log *logrus.Logger, name string, encrypted bool, encoded bool) (string, error) {
 
 	log.Infof("Retrieving parameter '%s'", name)
 
