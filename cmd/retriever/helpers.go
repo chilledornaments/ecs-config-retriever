@@ -10,10 +10,11 @@ import (
 )
 
 // writeSecretToFile writes the retrieved parameter value (value) to the specified path (path) for use between containers
-func writeSecretToFile(value, path string, log *logrus.Logger) {
+func writeValueToFile(value, path string, log *logrus.Logger) error {
 	f, err := os.Create(path)
 	if err != nil {
-		log.Fatalf("Error creating file: %s", err.Error())
+		log.Errorf("Error creating file: %s", err.Error())
+		return err
 	}
 
 	defer f.Close()
@@ -21,19 +22,21 @@ func writeSecretToFile(value, path string, log *logrus.Logger) {
 	_, err = f.WriteString(value)
 
 	if err != nil {
-		log.Fatalf("Error writing parameter to file: %s", err.Error())
+		log.Errorf("Error writing parameter to file: %s", err.Error())
+		return err
 	}
 
 	f.Sync()
 
 	log.Infof("Successfully wrote parameter to '%s'", path)
+	return nil
 }
 
 // createDirectory creates the directory for the parameter out file to be stored in
 // This is useful if you need to write files into subdirectories of your volume
 // For instance, you can mount one volume onto /init-out/app-a/config and another onto /init-out/app-b/config
 // Then mount these onto separate app containers
-func createDirectory(path string, log *logrus.Logger) {
+func createDirectory(path string, log *logrus.Logger) error {
 	fp := filepath.Dir(path)
 
 	info, err := os.Stat(fp)
@@ -42,15 +45,18 @@ func createDirectory(path string, log *logrus.Logger) {
 		log.Infof("Path '%s' does not exist. Attempting to create so we can store file", fp)
 		err = os.MkdirAll(fp, 0775)
 		if err != nil {
-			log.Fatalf("Error creating directory structure '%s': %s", fp, err.Error())
+			log.Errorf("Error creating directory structure '%s': %s", fp, err.Error())
+			return err
 		}
 		log.Infof("Successfully created directory '%s'", fp)
 	} else {
 		if !info.IsDir() {
-			log.Fatalf("'%s' is a file - unable to create directory in its place", fp)
+			log.Errorf("'%s' is a file - unable to create directory in its place", fp)
+			return err
 		}
 	}
 
+	return nil
 }
 
 // getValuesFromEnv retrieves configuration from env vars
@@ -106,14 +112,15 @@ func verifyFlags(log *logrus.Logger) {
 }
 
 // parseJSONArgument parses the -json argument into a struct
-func parseJSONArgument(log *logrus.Logger) JSONArgument {
+func parseJSONArgument(log *logrus.Logger) (JSONArgument, error) {
 	j := &JSONArgument{}
 
 	err := json.Unmarshal([]byte(jsonSettings), j)
 
 	if err != nil {
-		log.Fatalf("Unable to unmarshal -json argument into JSONArgument struct: %s", err.Error())
+		log.Errorf("Unable to unmarshal -json argument into JSONArgument struct: %s", err.Error())
+		return *j, err
 	}
 
-	return *j
+	return *j, nil
 }

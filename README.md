@@ -48,7 +48,7 @@ This is useful for writing a configuration file stored in SSM to a volume shared
 
 ## JSON Argument
 
-In order to retrieve multiple parameters, yYou can provide a JSON as a string to the `-json` argument.
+In order to retrieve multiple parameters, you can provide a JSON as a string to the `-json` argument.
 
 JSON structure:
 

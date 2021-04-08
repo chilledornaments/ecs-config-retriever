@@ -1,47 +1,39 @@
 package retriever
 
 import (
-	"os"
-
 	"encoding/base64"
 	"encoding/json"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
 )
 
 // GetParameterFromSSM retrieves the parameter from SSM
-func GetParameterFromSSM(name string, encrypted, encoded bool, log *logrus.Logger) string {
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(os.Getenv("AWS_REGION"))})
-
-	if err != nil {
-		log.Fatalf("Error creating AWS Session: %s", err.Error())
-	}
+func GetParameterFromSSM(c ssmiface.SSMAPI, log *logrus.Logger, name string, encrypted bool, encoded bool) (string, error) {
 
 	log.Infof("Retrieving parameter '%s'", name)
-
-	svc := ssm.New(sess)
 
 	input := &ssm.GetParameterInput{
 		Name:           aws.String(name),
 		WithDecryption: aws.Bool(encrypted),
 	}
-	param, err := svc.GetParameter(input)
+	param, err := c.GetParameter(input)
 
 	if err != nil {
-		log.Fatalf("Error retrieving parameter: %s", err.Error())
+		log.Errorf("Error retrieving parameter: %s", err.Error())
+		return "", err
 	}
 
 	log.Info("Successfully retrieved parameter")
 
 	if encoded {
-		return decodeParameterValue(*param.Parameter.Value, log)
+		return decodeParameterValue(*param.Parameter.Value, log), nil
 	}
 
-	return *param.Parameter.Value
+	return *param.Parameter.Value, nil
 
 }
 

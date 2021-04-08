@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
+	"gotest.tools/assert"
 )
 
 func setupTestingLogger() *logrus.Logger {
@@ -26,7 +27,9 @@ func TestParseJSONArgument(t *testing.T) {
 
 	l := setupTestingLogger()
 
-	j := parseJSONArgument(l)
+	j, e := parseJSONArgument(l)
+
+	assert.Equal(t, e, nil)
 
 	if j.Parameters[0].Name != "ci" {
 		l.Warnf("Expected parameter name to be 'ci' but it is '%s'", j.Parameters[0].Name)
@@ -52,4 +55,12 @@ func TestCreateDirectory(t *testing.T) {
 		l.Warn("/tmp/ci-test-dir is not a directory")
 		t.Fail()
 	}
+}
+
+func TestWriteSecretToFile(t *testing.T) {
+	l := setupTestingLogger()
+	e := writeValueToFile("hello world", "/tmp/file.txt", l)
+
+	assert.Equal(t, e, nil)
+
 }
