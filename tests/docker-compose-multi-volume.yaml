@@ -27,7 +27,7 @@ services:
       - retriever_multi
 
   retriever_multi:
-    image: "mitchya1/ecs-ssm-retriever:ci"
+    image: "mitchya1/ecs-config-retriever:ci"
     container_name: retriever_multi
     volumes:
       - config_a:/init-out/a
