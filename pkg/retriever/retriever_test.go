@@ -1,15 +1,16 @@
 package retriever
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"net"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/http"
 	"github.com/hashicorp/vault/vault"
@@ -17,16 +18,11 @@ import (
 	"gotest.tools/assert"
 )
 
-const (
-	secretPath = "kv-v2/test/ci/secret"
-)
-
 type mockSSMClient struct {
-	ssmiface.SSMAPI
 	Encoded bool
 }
 
-func (m *mockSSMClient) GetParameter(input *ssm.GetParameterInput) (*ssm.GetParameterOutput, error) {
+func (m *mockSSMClient) GetParameter(ctx context.Context, params *ssm.GetParameterInput, optFns ...func(*ssm.Options)) (*ssm.GetParameterOutput, error) {
 
 	var v string
 
@@ -37,12 +33,12 @@ func (m *mockSSMClient) GetParameter(input *ssm.GetParameterInput) (*ssm.GetPara
 	}
 
 	r := ssm.GetParameterOutput{
-		Parameter: &ssm.Parameter{
+		Parameter: &ssmtypes.Parameter{
 			ARN:              aws.String(""),
 			DataType:         aws.String("text"),
 			Name:             aws.String("test"),
 			LastModifiedDate: aws.Time(time.Now()),
-			Type:             aws.String("String"),
+			Type:             ssmtypes.ParameterTypeString,
 			Value:            &v,
 		},
 	}
@@ -55,7 +51,7 @@ func TestRetrievePlaintextSSMParameter(t *testing.T) {
 		Encoded: false,
 	}
 
-	v, e := GetParameterFromSSM(&c, logrus.New(), "/ci/test", false, false)
+	v, e := GetParameterFromSSM(context.TODO(), &c, logrus.New(), "/ci/test", false, false)
 
 	assert.Equal(t, e, nil)
 	assert.Equal(t, v, "This is a CI test")
@@ -66,7 +62,7 @@ func TestRetrieveEncodedSSMParameter(t *testing.T) {
 		Encoded: true,
 	}
 
-	v, e := GetParameterFromSSM(&c, logrus.New(), "/ci/example", false, true)
+	v, e := GetParameterFromSSM(context.TODO(), &c, logrus.New(), "/ci/example", false, true)
 
 	assert.Equal(t, e, nil)
 	assert.Equal(t, v, "This is a base64 encoded CI test")

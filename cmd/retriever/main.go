@@ -2,14 +2,16 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/mitchya1/ecs-config-retriever/pkg/retriever"
 
 	vault "github.com/hashicorp/vault/api"
@@ -42,17 +44,30 @@ type ParameterSetting struct {
 	Path     string `json:"path"`
 }
 
-func ssmHandler(log *logrus.Logger) {
-
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(os.Getenv("AWS_REGION"))})
+func newAWSConfig(region string) aws.Config {
+	cfg, err := config.LoadDefaultConfig(
+		context.TODO(),
+		config.WithRegion(region),
+	)
 
 	if err != nil {
-		log.Fatalf("Error creating AWS Session: %s", err.Error())
+		log.Fatalf("Failed to load SDK configuration, %v", err)
 	}
 
-	ssmClient := ssm.New(sess)
+	return cfg
+}
 
-	v, e := retriever.GetParameterFromSSM(ssmClient, log, parameterName, parameterIsEncrypted, parameterIsEncoded)
+func newSSMClient(cfg aws.Config) *ssm.Client {
+	return ssm.NewFromConfig(cfg)
+}
+
+func ssmHandler(log *logrus.Logger) {
+
+	awsConfig := newAWSConfig(os.Getenv("AWS_REGION"))
+
+	ssmClient := newSSMClient(awsConfig)
+
+	v, e := retriever.GetParameterFromSSM(context.Background(), ssmClient, log, parameterName, parameterIsEncrypted, parameterIsEncoded)
 
 	if e != nil {
 		// GetParameterFromSSM already logs the error
@@ -69,16 +84,12 @@ func ssmHandler(log *logrus.Logger) {
 }
 
 func ssmJSONHandler(log *logrus.Logger, j JSONArgument) {
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(os.Getenv("AWS_REGION"))})
+	awsConfig := newAWSConfig(os.Getenv("AWS_REGION"))
 
-	if err != nil {
-		log.Fatalf("Error creating AWS Session: %s", err.Error())
-	}
-
-	ssmClient := ssm.New(sess)
+	ssmClient := newSSMClient(awsConfig)
 
 	for _, p := range j.Parameters {
-		v, e := retriever.GetParameterFromSSM(ssmClient, log, p.Name, p.Encryped, p.Encoded)
+		v, e := retriever.GetParameterFromSSM(context.Background(), ssmClient, log, p.Name, p.Encryped, p.Encoded)
 
 		if e != nil {
 			// GetParameterFromSSM already logs the error
