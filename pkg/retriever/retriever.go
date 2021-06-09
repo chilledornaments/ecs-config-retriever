@@ -1,26 +1,27 @@
 package retriever
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
 )
 
 // GetParameterFromSSM retrieves the parameter from SSM
-func GetParameterFromSSM(c ssmiface.SSMAPI, log *logrus.Logger, name string, encrypted bool, encoded bool) (string, error) {
+func GetParameterFromSSM(ctx context.Context, c SSMClient, log *logrus.Logger, name string, encrypted bool, encoded bool) (string, error) {
 
 	log.Infof("Retrieving parameter '%s'", name)
 
 	input := &ssm.GetParameterInput{
 		Name:           aws.String(name),
-		WithDecryption: aws.Bool(encrypted),
+		WithDecryption: encrypted,
 	}
-	param, err := c.GetParameter(input)
+
+	param, err := c.GetParameter(ctx, input)
 
 	if err != nil {
 		log.Errorf("Error retrieving parameter: %s", err.Error())
