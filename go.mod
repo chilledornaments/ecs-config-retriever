@@ -4,11 +4,12 @@ go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.38.58 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.6.0
-	github.com/aws/aws-sdk-go-v2/config v1.3.0
+	github.com/aws/aws-sdk-go-v2 v1.8.0
+	github.com/aws/aws-sdk-go-v2/config v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.6.2
-	github.com/hashicorp/vault v1.7.2
-	github.com/hashicorp/vault/api v1.1.0
+	github.com/hashicorp/vault v1.9.4
+	github.com/hashicorp/vault/api v1.3.1
 	github.com/sirupsen/logrus v1.8.1
+	github.com/tencentcloud/tencentcloud-sdk-go v3.0.171+incompatible // indirect
 	gotest.tools v2.2.0+incompatible
 )
